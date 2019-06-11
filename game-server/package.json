@@ -1,0 +1,10 @@
+{
+    "name":"majiang",
+    "version":"1.0.0",
+    "private":false,
+    "dependencies":{
+        "pomelo":"2.2.5",
+        "crc": "0.2.0"
+    }
+}
+
