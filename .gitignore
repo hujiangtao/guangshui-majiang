@@ -1,0 +1,9 @@
+# files
+*.log
+server.crt
+server.key
+
+# folders
+.idea
+cocos2d-html5
+node_modules/
