@@ -11,6 +11,19 @@
   "modules": ["cocos2d","extensions"],
 
   "jsList":[
-    "js/resource.js"
+    "js/resource.js",
+    "js/view/login.js",
+    "js/view/create-role.js",
+    "js/view/hall.js",
+    "js/view/create-room-layer.js",
+    "js/view/join-room-layer.js",
+    "js/view/radio-button.js",
+    "js/view/radio-button-item.js",
+    "js/view/game.js",
+    "js/view/begin-game-layer.js",
+    "js/view/dice-animation-sprite.js",
+    "js/view/dice-number-layer.js",
+    "js/view/prepare-game-layer.js",
+    "js/view/game-player-layer.js"
   ]
 }
