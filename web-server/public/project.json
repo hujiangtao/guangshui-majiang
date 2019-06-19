@@ -24,6 +24,8 @@
     "js/view/dice-animation-sprite.js",
     "js/view/dice-number-layer.js",
     "js/view/prepare-game-layer.js",
-    "js/view/game-player-layer.js"
+    "js/view/game-player-layer.js",
+    "js/view/majiang-layer.js",
+    "js/view/mahjong.js"
   ]
 }

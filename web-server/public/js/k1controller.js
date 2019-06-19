@@ -42,6 +42,9 @@ window.k1controller = (function () {
         }else {
             return false;
         }
+
+        this.tiles = new Tiles();
+        this.addPomeloListener();
     }
 
     //计算player在当前客户端的位置
@@ -62,6 +65,7 @@ window.k1controller = (function () {
         }
     };
 
+    //set index
     Player.prototype.setIndex = function(index){
         if(this.index && this.index !== index){
             return false;
@@ -70,6 +74,7 @@ window.k1controller = (function () {
         this.index = index;
     };
 
+    //当前用户登录
     Player.prototype.login = function (cb) {
         var self = this;
 
@@ -90,6 +95,7 @@ window.k1controller = (function () {
         });
     };
 
+    //当前用户创建房间
     Player.prototype.createRoom = function (cb) {
         var self = this;
         var route = "connector.entryHandler.enterTheRoom";
@@ -113,6 +119,7 @@ window.k1controller = (function () {
         });
     };
 
+    //当前用户加入房间
     Player.prototype.joinRoom = function (roomNumber, cb) {
         var self = this;
         var isJoinRoom = false;
@@ -157,6 +164,7 @@ window.k1controller = (function () {
         return isJoinRoom;
     };
 
+    //当前用户从房间中返回游戏大厅
     Player.prototype.returnToHall = function (cb) {
         var route = "game.gameHandler.returnToHall";
 
@@ -170,6 +178,7 @@ window.k1controller = (function () {
 
     };
 
+    //当前用户解散房间
     Player.prototype.disbandRoom = function (cb) {
         var route = "game.gameHandler.disbandRoom";
 
@@ -188,6 +197,7 @@ window.k1controller = (function () {
         cc.log("disband room.");
     };
 
+    //当前用户登录房间后准备开始游戏
     Player.prototype.readyForGame = function () {
         var isReadyForGame = false;
 
@@ -212,13 +222,193 @@ window.k1controller = (function () {
         return isReadyForGame;
     };
 
-    var setSeat = function (room, player) {
-        if(room === null || player.playerId === currentPlayer.playerId){
-            player.seat = "current";
+    //当前用户获取进入的房间对象
+    Player.prototype.getRoom = function () {
+        if(this.room){
+            return this.room;
         }else {
-
+            return false;
         }
     };
+
+    //当前用户添加监听器，响应pomelo服务器的指令。
+    Player.prototype.addPomeloListener = function () {
+        var self = this;
+
+        pomelo.on("onTitles", function (data) {
+            console.log("onTitles: player " + data.target + ". titles: " + data.msg);
+
+            if(self.id === data.target){
+                self.tiles.initTiles(data.msg);
+            }else {
+                console.log("onTiles: player error!");
+                return false;
+            }
+
+        });
+    };
+
+    /*-----------------------------------------------------------------------*
+    * Player所有的麻将牌
+    *
+    * -----------------------------------------------------------------------*/
+    function Tiles() {
+        this.indexTiles = null;
+        this.showTiles = null;
+
+        this.shou = null;
+
+    }
+
+    Tiles.prototype.initTiles = function (tiles) {
+        this.indexTiles = tiles;
+
+        var initTiles = [];
+        for(var i = 0; i < tiles.length; i++){
+            initTiles.push(new Majiang(tiles[i], i));
+        }
+
+        this.shou = new TilesList();
+        while (initTiles.length > 0) {
+            this.shou.insertNode(initTiles.shift());
+        }
+
+        initTiles = null;
+    };
+
+    /*-----------------------------------------------------------------------*
+    * 手牌的数据结构: 有序链表
+    * 
+    * -----------------------------------------------------------------------*/    
+    function TilesList() {
+        this.header = null;
+        this.end = null;
+        this.length = 0;
+        this.expandNode = null;
+        this.listTitlesType = [];           //牌型
+    }
+
+    TilesList.prototype.insertNode = function (tile) {
+        if(this.header === null && this.end === null){
+            this.header = this.end = new NodeOfTilesList(tile.points, tile.suitIndex);
+            this.header.setTile(tile);
+
+            return;
+        }
+
+        if(comparePosition(tile, this.header) === "front"){
+            var newHeader = new NodeOfTilesList(tile.points, tile.suitIndex);
+            newHeader.setTile(tile);
+
+            this.header.top = newHeader;
+            newHeader.next = this.header;
+            this.header = newHeader;
+
+            return;
+        }
+
+        if(comparePosition(tile, this.end) === "behind"){
+            var newEnd = new NodeOfTilesList(tile.points, tile.suitIndex);
+            newEnd.setTile(tile);
+
+            this.end.next = newEnd;
+            newEnd.top = this.end;
+            this.end = newEnd;
+
+            return;
+        }
+
+        var tmpNode = this.header;
+        do{
+            switch (comparePosition(tile, tmpNode)) {
+                case "current":
+                    tmpNode.setTile(tile);
+                    return;
+                case "behind":
+                    tmpNode = tmpNode.next;
+                    break;
+                case "front":
+                    var currentNode = new NodeOfTilesList(tile.points, tile.suitIndex);
+                    currentNode.setTile(tile);
+
+                    tmpNode.top.next = currentNode;
+                    currentNode.top = tmpNode.top;
+                    currentNode.next = tmpNode;
+                    tmpNode.top = currentNode;
+
+                    return;
+                default:
+                    break;
+            }
+
+        }while (tmpNode !== null);
+
+        return;
+    };
+
+    var comparePosition = function (tile, node) {
+        if(tile.suitIndex < node.suitIndex){
+            return "front";
+        }else if(tile.suitIndex > node.suitIndex){
+            return "behind";
+        }else if(tile.suitIndex === node.suitIndex){
+            if(tile.points < node.points){
+                return "front";
+            }else if(tile.points > node.points){
+                return "behind";
+            }else if(tile.points === node.points){
+                return "current";
+            }
+        }
+    };
+
+
+    /*-----------------------------------------------------------------------*
+    * 有序链表的单元Node对象。
+    *
+    * -----------------------------------------------------------------------*/
+    function NodeOfTilesList(points, suitIndex) {
+        this.points = points;
+        this.suitIndex = suitIndex;
+        this.top = null;
+        this.next = null;
+        this.tiles = [];                        //同花色同点数的麻将对象.
+
+        this.count = 0;                         //实际count
+        this.currentCount = 0;                  //被前面的顺子占用后的count
+        this.expandCount = 0;                   //展开一个step后的count
+        this.expandFlag = "ready";              //"ready","run","end".
+        this.step = 1;
+        this.tType = new TitlesType();
+    }
+
+    NodeOfTilesList.prototype.setTile = function (tile) {
+        this.tiles.push(tile);
+        this.count += 1;
+    };
+
+    NodeOfTilesList.prototype.removeTile = function (tile) {
+        for(var i = 0; i < this.tiles.length; i++){
+            if(this.tiles[i].id === tile.id){
+                this.count -= 1;
+                return this.tiles.splice(i, 1);
+            }
+        }
+
+        return false;
+    };
+
+    /*-----------------------------------------------------------------------*
+    * 牌型。
+    *
+    * -----------------------------------------------------------------------*/
+    function TitlesType() {
+        this.si = [];           //杠
+        this.ke = [];           //刻
+        this.shun = [];         //顺
+        this.dui = [];          //对
+        this.dan = [];          //单
+    }
 
     /*-----------------------------------------------------------------------*
     * Room构造函数
@@ -227,10 +417,11 @@ window.k1controller = (function () {
     function Room(id, self) {
         this.roomId = id;
         this.players = {};
-        this.dealerId = null;
+        this.dealer = null;
         this.tokenId = null;
         this.players["current"] = self;
         this.viewEvent = {};
+        this.diceArray = [];
 
         this.addPomeloListeners();
     }
@@ -278,8 +469,50 @@ window.k1controller = (function () {
             self.viewEvent["addPlayerLayer"](player);
         });
 
-        pomelo.on("onReturnToHall", function (data) {});
-        pomelo.on("onReadyForGame",function (data) {});
+        pomelo.on("onDisbandRoom", function (data) {
+            console.log(data.msg);
+
+            self.viewEvent["runSceneNewHall"]();
+
+            for(var key in self.players){
+                self.players[key] = null;
+            }
+
+            currentPlayer.room = null;
+        });
+
+        pomelo.on("onReturnToHall", function (data) {
+            if(currentPlayer.id === data.uid){
+                self.viewEvent["runSceneNewHall"]();
+
+                for(var key in self.players){
+                    self.players[key] = null;
+                }
+
+                currentPlayer.room = null;
+            }else{
+                for(var key in self.players){
+                    if(self.players[key].id === data.uid){
+                        self.viewEvent["removePlayerLayer"](self.players[key]);
+                    }
+                }
+            }
+        });
+
+        pomelo.on("onReadyForGame",function (data) {
+            console.log("dice number: " + data.number);
+            // self._readyCallback(data.number, data.dealer);
+            for(var key in self.players){
+                if(self.players[key].id === data.dealer){
+                    self.dealer = self.players[key];
+                }
+            }
+
+            self.diceArray.push(data.number.number1);
+            self.diceArray.push(data.number.number2);
+
+            self.viewEvent["removePrepareGameLayer"]();
+        });
 
     };
 
@@ -303,12 +536,30 @@ window.k1controller = (function () {
     * Majiang构造函数
     *
     * -----------------------------------------------------------------------*/
-    function Majiang(args) {
-        var args = args || {};
+    function Majiang(id, index) {
+        this.id = id;
+        this.index = index;
+        this.postion = index;
+        this.points = id % 10;
+        this.name = this.points;
 
-        this.name = 'SingletonTester';
-        this.pointX = args.pointX || 6; //从接收的参数里获取，或者设置为默认值
-        this.pointY = args.pointY || 10;
+        if (Math.floor(id / 100) === 1) {
+            this.suit = "bamboo";
+            this.suitIndex = 1;
+        }else if(Math.floor(id / 100) === 3){
+            this.suit = "dot";
+            this.suitIndex = 3;
+        }else if(Math.floor(id / 100) === 5){
+            this.suit = "dragon";
+            this.suitIndex = 5;
+            if(this.points === 1){
+                this.name = "zhong";
+            }else if(this.points === 2){
+                this.name = "fa";
+            }else if(this.points === 3){
+                this.name = "bai";
+            }
+        }
     }
 
 

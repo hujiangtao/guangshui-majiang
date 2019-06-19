@@ -4,6 +4,8 @@
  * 游戏开始，开始打牌。
  ----------------------------------------------------------------**/
 var majiangLayer = cc.Layer.extend({
+    currentPlayer: null,
+    room: null,
     _shouPai: null,
     _naPai: null,
     _chiPai: null,
@@ -12,11 +14,9 @@ var majiangLayer = cc.Layer.extend({
     ctor: function(){
         this._super();
 
-        // var route = "game.gameHandler.initMJs";
-        // pomelo.request(route, {}, function () {
-        //
-        // });
-
+        var controller = window.k1controller;
+        this.currentPlayer = controller.getCurrentPlayer();
+        this.room = this.currentPlayer.room;
     },
 
     refresh: function(){

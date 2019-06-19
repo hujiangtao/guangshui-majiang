@@ -22,8 +22,6 @@ var PrepareGameLayer = cc.Layer.extend({
         var controller = window.k1controller;
         this.currentPlayer = controller.getCurrentPlayer();
         this.room = this.currentPlayer.room;
-
-        this.addPrepareEvent();
     },
     
     onEnter: function(){
@@ -80,23 +78,17 @@ var PrepareGameLayer = cc.Layer.extend({
             this.addChild(this.lyrDownPlayer, 1);
         }
 
+        this.addPrepareEvent();
     },
 
-    onRemoveFromParent: function(){
-        var self = this;
-
-        self.removeFromParent();
-    },
-
-
-    //TODO:返回大厅，此处只能非创建者点击调用。
+    //此处只能非创建者点击调用。
     onClickBtnReturnToHall: function () {
         this.currentPlayer.returnToHall(function (isReturnToHall) {
 
         });
 
     },
-    //TODO:解散房间：此处只能创建者点击。
+    //此处只能创建者点击。
     onClickBtnDisbandRoom: function () {
         this.currentPlayer.disbandRoom(function (isDisbandRoom) {
 
@@ -110,9 +102,10 @@ var PrepareGameLayer = cc.Layer.extend({
         });
     },
 
-
+    //到controller中注册的回调函数，当pomelo.on时，这些回调函数改变显示的一些状态。
     addPrepareEvent: function(){
         var self = this;
+        var parent = self.getParent();
 
         var addPlayerLayer = function (player) {
             if(player.position === "up"){
@@ -141,6 +134,21 @@ var PrepareGameLayer = cc.Layer.extend({
         };
 
         this.room.addViewEvent("removePlayerLayer", removePlayerLayer);
+
+        var runSceneNewHall = function () {
+            cc.director.runScene(new hallScene());
+        };
+
+        this.room.addViewEvent("runSceneNewHall", runSceneNewHall);
+
+        var removePrepareGameLayer = function () {
+            self.removeFromParent();
+            parent.addBeginGameLayer();
+
+            parent.lyrPrepareGame = null;
+        };
+
+        this.room.addViewEvent("removePrepareGameLayer", removePrepareGameLayer);
     }
 
 });

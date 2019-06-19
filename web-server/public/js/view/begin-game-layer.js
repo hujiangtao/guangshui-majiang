@@ -4,8 +4,17 @@
  * 游戏所在的层
  ----------------------------------------------------------------**/
 var BeginGameLayer = cc.Layer.extend({
-
     _diceNumberLayer: null,
+    currentPlayer: null,
+    room: null,
+
+    ctor: function(){
+        this._super();
+
+        var controller = window.k1controller;
+        this.currentPlayer = controller.getCurrentPlayer();
+        this.room = this.currentPlayer.room;
+    },
 
     setDiceNumbersLyr: function(layer){
         this._diceNumberLayer = layer;
@@ -15,12 +24,8 @@ var BeginGameLayer = cc.Layer.extend({
         this._super();
 
         var player_myself = new gamePlayerLayer();
-        player_myself.attr({
-            width: 100,
-            height: 100,
-            x: 100,
-            y: 210
-        });
+        player_myself.attr({ width: 100, height: 100, x: 100, y: 210 });
+        player_myself.setPlayer(this.currentPlayer);
         this.addChild(player_myself, 1);
 
         //骰子动作

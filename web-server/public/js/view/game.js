@@ -103,43 +103,19 @@ var gameLayer = cc.Layer.extend({
         this.lyrPrepareGame = new PrepareGameLayer();
         this.addChild(this.lyrPrepareGame, 0);
 
-        /*var setDiceNumber = function (data, dealer){
-            console.log("dice1: " + data.number1 + "; dice2: " + data.number2);
+    },
 
-            var diceNumbersLyr = new DiceNumberLayer();
-            diceNumbersLyr.setNumber(data.number1, data.number2);
+    addBeginGameLayer: function () {
+        var room = this.currentPlayer.getRoom();
+        if(room && room.diceArray.length === 2){
+            this.lyrDiceNumber = new DiceNumberLayer();
+            this.lyrDiceNumber.setNumber(room.diceArray[0], room.diceArray[1]);
+        }
 
-            var beginGameLyr = new BeginGameLayer();
-            beginGameLyr.setDiceNumbersLyr(diceNumbersLyr);
+        this.lyrBeginGame = new BeginGameLayer();
+        this.lyrBeginGame.setDiceNumbersLyr(this.lyrDiceNumber);
 
-            console.log("data.dealer = " + dealer);
-            player.getRoom().setDealer(dealer);
-
-            console.log("dealer id: " + player.getRoom().dealerId);
-            // beginGameLyr.setDiceNumbers(data.number1, data.number2);
-            self.addChild(beginGameLyr, 0);
-        };
-
-        // pomelo.on('onDiceNumber',setDiceNumber);
-
-        prepareGameLyr.setReadyCallback(function(data, dealer){
-            //移除准备层，并销毁对象
-            self.removeChild(prepareGameLyr);
-            prepareGameLyr = null;
-
-            setDiceNumber(data, dealer);
-
-            /!*       //获取骰子
-                   var route = "game.gameHandler.getDiceNumber";
-                   pomelo.request(route, {}, function (data) {
-                       if(data.code === 200){
-                           console.log("dice number: " + data.number);
-                       }
-                   });
-
-                   //生成game层开始游戏*!/
-
-        });*/
+        this.addChild(this.lyrBeginGame, 0);
 
     }
 });
@@ -156,40 +132,6 @@ var gameScene = cc.Scene.extend({
 
         var gameLyr = new gameLayer();
         this.addChild(gameLyr);
-/*
-        var self = this;
-        var disbandRoom = function(self){
-            self.removeChild(gameLyr);
-            gameLyr = null;
-            player.exitRoom();
-        };
-
-        pomelo.on('onDisbandRoom', function(data){
-            console.log(data.msg);
-
-            disbandRoom(self);
-            cc.director.runScene(new hallScene());
-
-        });
-
-        pomelo.on("onReturnToHall", function (data) {
-            console.log(data.msg);
-            if(player.uid === data.uid){
-                //如果是发出返回大厅的玩家id，该客户端返回大厅
-                self.removeChild(gameLyr);
-                gameLyr = null;
-                player.exitRoom();
-
-                cc.director.runScene(new hallScene());
-            }
-
-
-        });
-
-        pomelo.on("onTitles", function (data) {
-            console.log("onTitles: player " + data.target + ". titles: " + data.msg);
-            player.setTitles(data.msg);
-        });*/
 
     },
 
