@@ -19,178 +19,40 @@ var majiangLayer = cc.Layer.extend({
         this.room = this.currentPlayer.room;
     },
 
-    refresh: function(){
-        var player = k1game.getCurrentPlayer();
+    timer: function(){
+        var self = this;
 
-        for(var i = 0; i < this._shouPai.length; i++){
-            this.removeChild(this._shouPai[i]);
-        }
-        this._shouPai.splice(0, this._shouPai.length);
+        var action1 = cc.delayTime(1);
 
-        var tmpTitles = player.bambooTitles.concat(player.dotTitles.concat(player.dragonTitles));
+        var action2 = cc.callFunc(function () {
+            this.currentPlayer.tiles.sortTiles();
+        }, self);
 
-        for(var i = 0; i < tmpTitles.length; i ++){
-            if (Math.floor(tmpTitles[i] / 100) === 1) {
-                var num = tmpTitles[i] % 10;
-                var majiang = new Mahjong(cc.spriteFrameCache.getSpriteFrame("M_bamboo_"+ num +".png"));
-                majiang.initMajong(tmpTitles, "bamboo", num);
-                majiang.paiDui = "shou";
-                this._shouPai.push(majiang);
-            }else if(Math.floor(tmpTitles[i] / 100) === 3){
-                var num = tmpTitles[i] % 10;
-                var majiang = new Mahjong(cc.spriteFrameCache.getSpriteFrame("M_dot_"+ num +".png"));
-                majiang.initMajong(tmpTitles[i], "dot", num);
-                majiang.paiDui = "shou";
-                this._shouPai.push(majiang);
-            }else if(Math.floor(tmpTitles[i] / 100) === 5){
-                var num = tmpTitles[i] % 10;
-                if(num === 1){
-                    var majiang = new Mahjong(cc.spriteFrameCache.getSpriteFrame("M_red.png"));
-                    majiang.initMajong(tmpTitles[i], "dragon", num);
-                    majiang.paiDui = "shou";
-                    this._shouPai.push(majiang);
-                }else if(num === 2){
-                    var majiang = new Mahjong(cc.spriteFrameCache.getSpriteFrame("M_green.png"));
-                    majiang.initMajong(tmpTitles[i], "dragon", num);
-                    majiang.paiDui = "shou";
-                    this._shouPai.push(majiang);
-                }else if(num === 3){
-                    var majiang = new Mahjong(cc.spriteFrameCache.getSpriteFrame("M_white.png"));
-                    majiang.initMajong(tmpTitles[i], "dragon", num);
-                    majiang.paiDui = "shou";
-                    this._shouPai.push(majiang);
-                }else{
-                    return false;
-                }
-            }else {
-                return false;
-            }
-        }
-
-        for(var i = 0; i < this._shouPai.length; i++){
-            this._shouPai[i].attr({
-                x: 150 + i * 75, y: 80
-            });
-            this._shouPai[i].setMJPos(150 + i * 75, 80);
-            this.addChild(this._shouPai[i], 3);
-        }
-    },
-
-    chupai: function(title, position, that){
-        var player = k1game.getCurrentPlayer();
-
-        if(position === "myself"){
-            player.chupai.push(title);
-
-            for(var i = 0; i < player.chupai.length; i++){
-                var titleStr;
-                var num = player.chupai[i] % 10;
-                var suit;
-                if(Math.floor(player.chupai[i] / 100) === 1){
-                    titleStr = "M_bamboo_" + num + ".png";
-                    suit = "bamboo";
-                }else if(Math.floor(player.chupai[i] / 100) === 3){
-                    titleStr = "M_dot_"+ num +".png";
-                    suit = "dot";
-                }else if(Math.floor(player.chupai[i] / 100) === 5 && num === 1){
-                    titleStr = "M_red.png";
-                    suit = "dragon";
-                }else if(Math.floor(player.chupai[i] / 100) === 5 && num === 2){
-                    titleStr = "M_green.png";
-                    suit = "dragon";
-                }else if(Math.floor(player.chupai[i] / 100) === 5 && num === 3){
-                    titleStr = "M_white.png";
-                    suit = "dragon";
-                }
-
-                var majiang = new cc.Sprite(cc.spriteFrameCache.getSpriteFrame(titleStr));
-                that._qiPai.push(majiang);
-
-
-            }
-
-            for(var i = 0; i < that._qiPai.length; i++){
-                if(i < 11){
-                    that._qiPai[i].attr({
-                        x: that.width / 2 + (i - 5) * 44, y: 180,
-                        scaleX: 0.8, scaleY: 0.8
-                    });
-                    that.addChild(that._qiPai[i], 2);
-                } else if (i >= 11 && i < 22 ) {
-                    that._qiPai[i].attr({
-                        x: that.width / 2 + (i - 16) * 44, y: 230,
-                        scaleX: 0.8, scaleY: 0.8
-                    });
-                    that.addChild(that._qiPai[i], 1);
-                } else
-                    return false;
-            }
-
-        }else if( position === "left"){
-            var l_qiPai = [];
-
-            for(var i = 0; i < player.chupai.length; i++){
-                var titleStr;
-                var num = player.chupai[i] % 10;
-                var suit;
-                if(Math.floor(player.chupai[i] / 100) === 1){
-                    titleStr = "M_bamboo_" + num + ".png";
-                    suit = "bamboo";
-                }else if(Math.floor(player.chupai[i] / 100) === 3){
-                    titleStr = "M_dot_"+ num +".png";
-                    suit = "dot";
-                }else if(Math.floor(player.chupai[i] / 100) === 5 && num === 1){
-                    titleStr = "M_red.png";
-                    suit = "dragon";
-                }else if(Math.floor(player.chupai[i] / 100) === 5 && num === 2){
-                    titleStr = "M_green.png";
-                    suit = "dragon";
-                }else if(Math.floor(player.chupai[i] / 100) === 5 && num === 3){
-                    titleStr = "M_white.png";
-                    suit = "dragon";
-                }
-
-                var majiang = new cc.Sprite(cc.spriteFrameCache.getSpriteFrame(titleStr));
-                that._qiPai.push(majiang);
-
-
-            }
-
-
-            do {
-                var i = Math.floor( Math.random() * 10 );
-                var y = 0;
-                if(i > 0){
-                    y++;
-                    var l_majiang = new cc.Sprite(cc.spriteFrameCache.getSpriteFrame("L_bamboo_"+ i +".png"));
-                    l_qiPai.push(l_majiang);
-                }
-            } while(l_qiPai.length < 18);
-
-            cc.log("left qipai: " + l_qiPai.length);
-            for(var i = 0; i < l_qiPai.length; i++){
-                if(i < 11){
-                    l_qiPai[i].attr({
-                        x: 320, y: this.height / 2 - (i -8 )* 25,
-                    });
-                    this.addChild(l_qiPai[i], 2);
-                } else if (i >= 11 && i < 22 ) {
-                    l_qiPai[i].attr({
-                        x: 368,  y: this.height / 2 - (i - 19) * 25
-                    });
-                    this.addChild(l_qiPai[i], 1);
-                } else
-                    return false;
-            }
-
-        }else if(position === "right"){
-
-        }
+        self.runAction(cc.sequence(action1, action2));
     },
 
     onEnter: function(){
         this._super();
-        var player = k1game.getCurrentPlayer();
+
+        var currentNode = this.currentPlayer.tiles.shou.header;
+        var shoupai = [];
+
+        do {
+            for(var k = 0, len = currentNode.tiles.length; k < len; k++){
+                var majiang = new Mahjong(currentNode.tiles[k]);
+                shoupai.push(majiang);
+            }
+            currentNode = currentNode.next;
+        }while (currentNode !== null);
+
+        for(var i = 0, len = shoupai.length; i < len; i ++){
+            this.addChild(shoupai[i]);
+        }
+
+        this.timer();
+
+
+/*        var player = k1game.getCurrentPlayer();
 
         cc.spriteFrameCache.addSpriteFrames(res.right_mj_plist);
         cc.spriteFrameCache.addSpriteFrames(res.left_mj_plist);
@@ -202,7 +64,7 @@ var majiangLayer = cc.Layer.extend({
         this._chiPai = [];      //吃碰杠的牌堆
         this._qiPai = [];       //打出去的牌堆
         this._naPai = 0;       //从牌堆里拿到的牌
-        /**-----------------------------------------------------**/
+        /!**-----------------------------------------------------**!/
 
         for(var i = 0; i < player.titles.length; i ++){
             if (Math.floor(player.titles[i] / 100) === 1) {
@@ -349,7 +211,7 @@ var majiangLayer = cc.Layer.extend({
 
         var route = "game.gameHandler.synchronous";
         pomelo.request(route, {titles: tmpTitles}, sortGameTitles);
-        /**-----------------------------------------------------**/
+        /!**-----------------------------------------------------**!/
 
             //左边的手牌
         var l_shouPai = [];
@@ -360,7 +222,7 @@ var majiangLayer = cc.Layer.extend({
             //this.addChild(l_majiang, 1+i);
             this.addChild(l_majiang, 1);
         }
-        /**-----------------------------------------------------**/
+        /!**-----------------------------------------------------**!/
 
             //右边的手牌
         var r_shouPai = [];
@@ -370,7 +232,7 @@ var majiangLayer = cc.Layer.extend({
             r_shouPai.push(r_majiang);
             this.addChild(r_majiang, 1);
         }
-        /**-----------------------------------------------------**/
+        /!**-----------------------------------------------------**!/
 
 
 
@@ -391,7 +253,7 @@ var majiangLayer = cc.Layer.extend({
 
 
         };
-        pomelo.on("playTitle", cb_playTitle);
+        pomelo.on("playTitle", cb_playTitle);*/
 
 
         /*
@@ -580,5 +442,129 @@ var majiangLayer = cc.Layer.extend({
         /**-----------------------------------------------------**/
 
 
+    },
+
+
+
+
+
+
+
+
+
+
+
+    chupai: function(title, position, that){
+        var player = k1game.getCurrentPlayer();
+
+        if(position === "myself"){
+            player.chupai.push(title);
+
+            for(var i = 0; i < player.chupai.length; i++){
+                var titleStr;
+                var num = player.chupai[i] % 10;
+                var suit;
+                if(Math.floor(player.chupai[i] / 100) === 1){
+                    titleStr = "M_bamboo_" + num + ".png";
+                    suit = "bamboo";
+                }else if(Math.floor(player.chupai[i] / 100) === 3){
+                    titleStr = "M_dot_"+ num +".png";
+                    suit = "dot";
+                }else if(Math.floor(player.chupai[i] / 100) === 5 && num === 1){
+                    titleStr = "M_red.png";
+                    suit = "dragon";
+                }else if(Math.floor(player.chupai[i] / 100) === 5 && num === 2){
+                    titleStr = "M_green.png";
+                    suit = "dragon";
+                }else if(Math.floor(player.chupai[i] / 100) === 5 && num === 3){
+                    titleStr = "M_white.png";
+                    suit = "dragon";
+                }
+
+                var majiang = new cc.Sprite(cc.spriteFrameCache.getSpriteFrame(titleStr));
+                that._qiPai.push(majiang);
+
+
+            }
+
+            for(var i = 0; i < that._qiPai.length; i++){
+                if(i < 11){
+                    that._qiPai[i].attr({
+                        x: that.width / 2 + (i - 5) * 44, y: 180,
+                        scaleX: 0.8, scaleY: 0.8
+                    });
+                    that.addChild(that._qiPai[i], 2);
+                } else if (i >= 11 && i < 22 ) {
+                    that._qiPai[i].attr({
+                        x: that.width / 2 + (i - 16) * 44, y: 230,
+                        scaleX: 0.8, scaleY: 0.8
+                    });
+                    that.addChild(that._qiPai[i], 1);
+                } else
+                    return false;
+            }
+
+        }else if( position === "left"){
+            var l_qiPai = [];
+
+            for(var i = 0; i < player.chupai.length; i++){
+                var titleStr;
+                var num = player.chupai[i] % 10;
+                var suit;
+                if(Math.floor(player.chupai[i] / 100) === 1){
+                    titleStr = "M_bamboo_" + num + ".png";
+                    suit = "bamboo";
+                }else if(Math.floor(player.chupai[i] / 100) === 3){
+                    titleStr = "M_dot_"+ num +".png";
+                    suit = "dot";
+                }else if(Math.floor(player.chupai[i] / 100) === 5 && num === 1){
+                    titleStr = "M_red.png";
+                    suit = "dragon";
+                }else if(Math.floor(player.chupai[i] / 100) === 5 && num === 2){
+                    titleStr = "M_green.png";
+                    suit = "dragon";
+                }else if(Math.floor(player.chupai[i] / 100) === 5 && num === 3){
+                    titleStr = "M_white.png";
+                    suit = "dragon";
+                }
+
+                var majiang = new cc.Sprite(cc.spriteFrameCache.getSpriteFrame(titleStr));
+                that._qiPai.push(majiang);
+
+
+            }
+
+
+            do {
+                var i = Math.floor( Math.random() * 10 );
+                var y = 0;
+                if(i > 0){
+                    y++;
+                    var l_majiang = new cc.Sprite(cc.spriteFrameCache.getSpriteFrame("L_bamboo_"+ i +".png"));
+                    l_qiPai.push(l_majiang);
+                }
+            } while(l_qiPai.length < 18);
+
+            cc.log("left qipai: " + l_qiPai.length);
+            for(var i = 0; i < l_qiPai.length; i++){
+                if(i < 11){
+                    l_qiPai[i].attr({
+                        x: 320, y: this.height / 2 - (i -8 )* 25,
+                    });
+                    this.addChild(l_qiPai[i], 2);
+                } else if (i >= 11 && i < 22 ) {
+                    l_qiPai[i].attr({
+                        x: 368,  y: this.height / 2 - (i - 19) * 25
+                    });
+                    this.addChild(l_qiPai[i], 1);
+                } else
+                    return false;
+            }
+
+        }else if(position === "right"){
+
+        }
     }
+
+
 });

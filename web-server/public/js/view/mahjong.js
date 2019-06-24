@@ -4,30 +4,61 @@
  *
  ----------------------------------------------------------------**/
 var Mahjong = cc.Sprite.extend({
-    _mahjongId: null,
-    _suit: null,
-    _suitNumber: null,
-    touchMahjongListener: null,
-    beginAction: null,
-    mjActionStatus: 0,
+    majiang: null,
+
     mjPosX: 0,
     mjPosY: 0,
+    beginAction: null,
+    mjActionStatus: 0,
+    touchMahjongListener: null,
     checkMahjongListener: null,
     paiDui: null,
 
-    initMajong: function(id, suit, number){
-        this._mahjongId = id;
-        this._suit = suit;
-        this._suitNumber = number;
+    ctor: function(mj){
+        cc.spriteFrameCache.addSpriteFrames(res.right_mj_plist);
+        cc.spriteFrameCache.addSpriteFrames(res.left_mj_plist);
+        cc.spriteFrameCache.addSpriteFrames(res.myself_mj_plist);
+        cc.spriteFrameCache.addSpriteFrames(res.empty_mj_plist);
+        cc.spriteFrameCache.addSpriteFrames(res.opposite_mj_plist);
+
+        var picStr = "";
+        if(mj.suit === "bamboo"){
+            picStr = "M_bamboo_"+ mj.points +".png";
+        }else if(mj.suit === "dot"){
+            picStr = "M_dot_"+ mj.points +".png";
+        }else if(mj.suit === "dragon" && mj.name === "zhong"){
+            picStr = "M_red.png"
+        }else if(mj.suit === "dragon" && mj.name === "fa"){
+            picStr = "M_green.png"
+        }else if(mj.suit === "dragon" && mj.name === "bai"){
+            picStr = "M_white.png"
+        }
+
+        this._super(cc.spriteFrameCache.getSpriteFrame(picStr));
+
+        this.majiang = mj;
+        this.setMJPosition();
+        mj.view = this;
     },
 
-    setMJPos: function(x, y){
-        this.mjPosX = x;
-        this.mjPosY = y;
+    setMJPosition: function(){
+        this.attr({ x: 150 + this.majiang.postion * 75, y: 80 });
+
+        this.mjPosX = this.x;
+        this.mjPosY = this.y;
+    },
+
+    onEnter: function(){
+        this._super();
+
+        this.addMahjongListener();
+    },
+
+    moveToNewPosition: function(){
+
     },
 
     addMahjongListener: function(){
-        var player = k1game.getCurrentPlayer();
         var self = this;
 
         if( 'touches' in cc.sys.capabilities ) {
@@ -104,7 +135,7 @@ var Mahjong = cc.Sprite.extend({
             });
             cc.eventManager.addListener(this.touchMahjongListener, this);
 
-            this.checkMahjongListener = cc.EventListener.create({
+            /*this.checkMahjongListener = cc.EventListener.create({
                 event: cc.EventListener.MOUSE,
                 onMouseUp: function (event) {
                     var pos = event.getLocation();
@@ -139,7 +170,7 @@ var Mahjong = cc.Sprite.extend({
                     }
                 }
             });
-            cc.eventManager.addListener(this.checkMahjongListener, this);
+            cc.eventManager.addListener(this.checkMahjongListener, this);*/
 
 
 
@@ -147,12 +178,5 @@ var Mahjong = cc.Sprite.extend({
             cc.log("touches NOT in capabilities");
         }
 
-    },
-
-    onEnter: function(){
-        this._super();
-
-        this.addMahjongListener();
     }
-
 });

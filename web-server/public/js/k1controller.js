@@ -44,7 +44,6 @@ window.k1controller = (function () {
         }
 
         this.tiles = new Tiles();
-        this.addPomeloListener();
     }
 
     //计算player在当前客户端的位置
@@ -231,49 +230,42 @@ window.k1controller = (function () {
         }
     };
 
-    //当前用户添加监听器，响应pomelo服务器的指令。
-    Player.prototype.addPomeloListener = function () {
-        var self = this;
-
-        pomelo.on("onTitles", function (data) {
-            console.log("onTitles: player " + data.target + ". titles: " + data.msg);
-
-            if(self.id === data.target){
-                self.tiles.initTiles(data.msg);
-            }else {
-                console.log("onTiles: player error!");
-                return false;
-            }
-
-        });
-    };
-
     /*-----------------------------------------------------------------------*
+    * Tiles()
     * Player所有的麻将牌
-    *
     * -----------------------------------------------------------------------*/
     function Tiles() {
-        this.indexTiles = null;
-        this.showTiles = null;
-
+        this.indexTiles = [];
         this.shou = null;
-
     }
 
+    //初始化手牌链表
     Tiles.prototype.initTiles = function (tiles) {
-        this.indexTiles = tiles;
-
-        var initTiles = [];
         for(var i = 0; i < tiles.length; i++){
-            initTiles.push(new Majiang(tiles[i], i));
+            this.indexTiles.push(new Majiang(tiles[i], i));
         }
 
         this.shou = new TilesList();
-        while (initTiles.length > 0) {
-            this.shou.insertNode(initTiles.shift());
+        for(var j = 0; j < this.indexTiles.length; j++){
+            this.shou.insertNode(this.indexTiles[j]);
         }
+    };
 
-        initTiles = null;
+    //将Tiles的手牌链表的麻将牌的position按照位置更新新值。
+    Tiles.prototype.sortTiles = function () {
+        //更改麻将的位置.
+        var pos = 0;
+        var currentNode = this.shou.header;
+
+        do {
+            for(var k = 0, len = currentNode.tiles.length; k < len; k++){
+                currentNode.tiles[k].changePosition(pos, true);
+                pos += 1;
+                console.log("sort " + currentNode.tiles[k].id + " new pos is " + currentNode.tiles[k].postion);
+            }
+            currentNode = currentNode.next;
+        }while (currentNode !== null);
+
     };
 
     /*-----------------------------------------------------------------------*
@@ -284,14 +276,20 @@ window.k1controller = (function () {
         this.header = null;
         this.end = null;
         this.length = 0;
+        this.pointer = null;
+        this.expandStartPointer = null;
+        this.expandEndPointer = null;
+
         this.expandNode = null;
         this.listTitlesType = [];           //牌型
     }
 
+    //向链表中添加节点
     TilesList.prototype.insertNode = function (tile) {
         if(this.header === null && this.end === null){
             this.header = this.end = new NodeOfTilesList(tile.points, tile.suitIndex);
             this.header.setTile(tile);
+            this.length += 1;
 
             return;
         }
@@ -303,6 +301,7 @@ window.k1controller = (function () {
             this.header.top = newHeader;
             newHeader.next = this.header;
             this.header = newHeader;
+            this.length += 1;
 
             return;
         }
@@ -314,6 +313,7 @@ window.k1controller = (function () {
             this.end.next = newEnd;
             newEnd.top = this.end;
             this.end = newEnd;
+            this.length += 1;
 
             return;
         }
@@ -323,6 +323,7 @@ window.k1controller = (function () {
             switch (comparePosition(tile, tmpNode)) {
                 case "current":
                     tmpNode.setTile(tile);
+                    this.length += 1;
                     return;
                 case "behind":
                     tmpNode = tmpNode.next;
@@ -335,17 +336,17 @@ window.k1controller = (function () {
                     currentNode.top = tmpNode.top;
                     currentNode.next = tmpNode;
                     tmpNode.top = currentNode;
-
+                    this.length += 1;
                     return;
                 default:
                     break;
             }
 
-        }while (tmpNode !== null);
+        }while (this.length < 13);
 
-        return;
     };
 
+    //判断麻将牌应该与指定节点的位置关系
     var comparePosition = function (tile, node) {
         if(tile.suitIndex < node.suitIndex){
             return "front";
@@ -362,6 +363,42 @@ window.k1controller = (function () {
         }
     };
 
+    TilesList.prototype.traverseType = function(){
+        var traverseList = new TilesList();
+        var tmpNode = this.header;
+        var currentNode = null;
+
+        while (tmpNode !== null){
+            if(currentNode === null){
+                currentNode = new NodeOfTilesList(tmpNode.points, tmpNode.suitIndex);
+                currentNode.tiles = tmpNode.tiles;
+
+                traverseList.header = currentNode;
+            }else {
+                currentNode.next = new NodeOfTilesList(tmpNode.points, tmpNode.suitIndex);
+                currentNode.next.tiles = tmpNode.tiles;
+
+                currentNode.next.top = currentNode;
+
+                currentNode = currentNode.next;
+            }
+
+            tmpNode = tmpNode.next;
+            if(tmpNode === null){
+                traverseList.end = currentNode;
+            }
+        }
+
+        while (traverseList.header.status !== "reset"){
+            if(traverseList.header.status === "init"){
+                traverseList.expandStartPointer = traverseList.expandEndPointer = traverseList.header;
+            }
+
+            traverseList.expandStartPointer.expandNode(traverseList);
+        }
+
+    };
+
 
     /*-----------------------------------------------------------------------*
     * 有序链表的单元Node对象。
@@ -373,6 +410,8 @@ window.k1controller = (function () {
         this.top = null;
         this.next = null;
         this.tiles = [];                        //同花色同点数的麻将对象.
+        this.type = null;
+        this.status = "init";                   //init, expand, reset
 
         this.count = 0;                         //实际count
         this.currentCount = 0;                  //被前面的顺子占用后的count
@@ -382,11 +421,13 @@ window.k1controller = (function () {
         this.tType = new TitlesType();
     }
 
+    //向节点中添加麻将牌对象
     NodeOfTilesList.prototype.setTile = function (tile) {
         this.tiles.push(tile);
         this.count += 1;
     };
 
+    //从节点中移除麻将牌对象
     NodeOfTilesList.prototype.removeTile = function (tile) {
         for(var i = 0; i < this.tiles.length; i++){
             if(this.tiles[i].id === tile.id){
@@ -396,6 +437,68 @@ window.k1controller = (function () {
         }
 
         return false;
+    };
+
+    NodeOfTilesList.prototype.expandNode = function(traverseList) {
+        if(this.status === "init"){
+            switch (this.tiles.length) {
+                case 4:
+                    this.type = "si";
+                    break;
+                case 3:
+                    this.type = "ke";
+                    break;
+                case 2:
+                    this.type = "dui";
+                    break;
+                case 1:
+                    this.type = compareShunzi(traverseList);
+                    if(this.type === "shun"){
+                        composeShunzi(traverseList);
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            this.status = "expand";
+        }else if(this.status === "expand"){
+
+        }
+    };
+
+    var compareShunzi = function(list){
+        if(list.expandEndPointer.type === "dan"){
+            return "dan";
+        }else if(list.expandEndPointer.next === null || list.expandEndPointer.next.next === null){
+            return "dan";
+        }else if(list.expandEndPointer.suitIndex !== list.expandEndPointer.next.suitIndex
+            || list.expandEndPointer.suitIndex !== list.expandEndPointer.next.next.suitIndex){
+            return "dan";
+        }else if(list.expandEndPointer.next.count === 0 || list.expandEndPointer.next.next.count === 0){
+            return "dan";
+        }else if(list.expandEndPointer.points + 1 !== list.expandEndPointer.next.points
+            || list.expandEndPointer.points + 2 !== list.expandEndPointer.next.next.points){
+            return "dan";
+        }else {
+            return "shun";
+        }
+    };
+
+    var composeShunzi = function(list){
+        list.expandEndPointer.tiles.push(list.expandEndPointer.next.tiles.pop());
+        list.expandEndPointer.tiles.push(list.expandEndPointer.next.next.tiles.pop());
+        list.expandEndPointer.next.count -= 1;
+        list.expandEndPointer.next.next.count -= 1;
+    };
+
+
+
+    /**匹配函数------------------------------------------------------------------**/
+
+    var matchingTypes = function(typeArray, listType){
+
+
     };
 
     /*-----------------------------------------------------------------------*
@@ -426,16 +529,19 @@ window.k1controller = (function () {
         this.addPomeloListeners();
     }
 
+    //向房间中添加视图事件
     Room.prototype.addViewEvent = function(eventName, cb){
         if(!this.viewEvent[eventName]){
             this.viewEvent[eventName]= cb;
         }
     };
 
+    //获取房间id
     Room.prototype.getRoomId = function () {
         return this.roomId;
     };
 
+    //向房间中添加Player对象
     Room.prototype.insertPlayer = function (player) {
         if(!this.players["current"]){
             console.log("current player error!");
@@ -449,11 +555,12 @@ window.k1controller = (function () {
         }else if(player.position === "down" && !this.players["down"]){
             this.players["down"] = player;
         }else {
-            return false;
             console.log("insert player error.")
+            return false;
         }
     };
 
+    //注册pomelo Listener
     Room.prototype.addPomeloListeners = function () {
         var self = this;
 
@@ -514,9 +621,22 @@ window.k1controller = (function () {
             self.viewEvent["removePrepareGameLayer"]();
         });
 
+        pomelo.on("onTitles", function (data) {
+            console.log("onTitles: player " + data.target + ". titles: " + data.msg);
+            var player = self.players["current"];
+
+            if(player.id === data.target){
+                player.tiles.initTiles(data.msg);
+            }else {
+                console.log("onTiles: player error! data.target = " + data.target);
+                return false;
+            }
+
+        });
+
     };
 
-    Room.prototype.viewEvent = function () {
+    Room.prototype.showTiles = function () {
 
     };
 
@@ -542,6 +662,8 @@ window.k1controller = (function () {
         this.postion = index;
         this.points = id % 10;
         this.name = this.points;
+        this.status = "init";
+        this.view = null;
 
         if (Math.floor(id / 100) === 1) {
             this.suit = "bamboo";
@@ -562,7 +684,21 @@ window.k1controller = (function () {
         }
     }
 
+    //更改麻将牌的位置
+    Majiang.prototype.changePosition = function (pos, isInit) {
+        if(isInit){
+            this.postion = pos;
+            this.view.setMJPosition();
+        }else {
+            this.postion = pos;
 
+            // 通知麻将执行move动作
+
+        }
+    };
+
+    /*--------------------------------------返回单例对象--------------------------------------*/
+    /*--------------------------------------返回单例对象--------------------------------------*/
     /*--------------------------------------返回单例对象--------------------------------------*/
     //实例容器
     var currentPlayer, application;
@@ -585,13 +721,6 @@ window.k1controller = (function () {
             return application;
         },
 
-        //在前端，房间与当前用户的关系是组合关系，没有必要特别暴露获取房间对象的接口。
-        /*getRoom: function (args) {
-            if (room === undefined) {
-                room = new Room(args);
-            }
-            return room;
-        }*/
     };
     return _controller;
 })();
