@@ -7,3 +7,4 @@ server.key
 .idea
 cocos2d-html5
 node_modules/
+logs/
