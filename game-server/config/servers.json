@@ -1,13 +1,13 @@
 {
     "development":{
         "connector":[
-             {"id":"connector-server-3", "host":"192.168.16.118", "port":4052, "clientPort": 3052, "frontend": true, "args": "--debug=32363"}
+             {"id":"connector-server-3", "host":"192.168.16.118", "port":4052, "clientPort": 3052, "frontend": true, "args": "--inspect=32363"}
          ],
         "game":[
-             {"id":"game-server-3", "host":"192.168.16.118", "port":6052, "args": "--debug=32373"}
+             {"id":"game-server-3", "host":"192.168.16.118", "port":6052, "args": "--inspect=32373"}
         ],
         "gate":[
-           {"id": "gate-server-1", "host": "192.168.16.118", "clientPort": 3014, "frontend": true, "args": "--debug=32312"}
+           {"id": "gate-server-1", "host": "192.168.16.118", "clientPort": 3014, "frontend": true, "args": "--inspect=32312"}
         ]
     },
     "production":{

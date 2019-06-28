@@ -6,9 +6,40 @@
     "configurations": [
         {
             "type": "node",
+            "request": "attach",
+            "name": "Attach game",
+            "port": 32373
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach connector",
+            "port": 32363
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach gate",
+            "port": 32312
+        },
+        {
+            "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Launch game",
+            "program": "${workspaceFolder}/game-server/app.js",
+            "args": ["env=development"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch web",
             "program": "${workspaceFolder}/web-server/app.js"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Server/Client",
+            "configurations": ["Launch game","Launch web"]
         }
     ]
 }
