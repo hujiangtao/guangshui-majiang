@@ -3,7 +3,7 @@
  *
  * 过、胡、亮、碰、杠
  ----------------------------------------------------------------**/
-var operateTitleLyr = cc.Layer.extend({
+var operateTileLyr = cc.Layer.extend({
     ctor: function (args) {
         this._super();
 

@@ -212,9 +212,9 @@ remote.readyForTheGame = function(uid, roomId, cb){
 	if(count === 3){
 		var num1 = random.RandomNumBoth(1, 6);
 		var num2 = random.RandomNumBoth(1, 6);
-		var titles = random.shuffleTiles();
-		rpcLogger.info("-- 洗牌 titles: %j", titles);
-		room.setTitles(titles, this.channelService);
+		var tiles = random.shuffleTiles();
+		rpcLogger.info("-- 洗牌 tiles: %j", tiles);
+		room.setTiles(tiles, this.channelService);
 
 		var dealerId = room.getDealer().uid;
 		rpcLogger.debug("-- get dealer id: %s",dealerId);
@@ -236,31 +236,31 @@ remote.initMJs = function(uid, roomId, cb){
 	var room = this.rooms[roomId];
 	var player = room.players[uid];
 
-	var titles = random.shuffleTiles();
-	rpcLogger.info("titles: %j", titles);
+	var tiles = random.shuffleTiles();
+	rpcLogger.info("tiles: %j", tiles);
 
-	room.setTitles(titles);
+	room.setTiles(tiles);
 
 };
 
 /**
  * 同步麻将牌
  **/
-remote.synchronousTitles = function(titles, uid, roomId, cb){
+remote.synchronousTiles = function(tiles, uid, roomId, cb){
 	var room = this.rooms[roomId];
 	var player = room.players[uid];
 
-	player.titles = player.bambooTitles.concat(player.dotTitles.concat(player.dragonTitles));
-	var tmpTitles = player.titles;
+	player.tiles = player.bambooTiles.concat(player.dotTiles.concat(player.dragonTiles));
+	var tmpTiles = player.tiles;
 	var hasFlag;
 
-	for(var i = 0; i < titles.length; i++){
+	for(var i = 0; i < tiles.length; i++){
 		hasFlag = false;
 
-		for(var j = 0; j < tmpTitles.length; j++){
-			if(titles[i] === tmpTitles[j]){
+		for(var j = 0; j < tmpTiles.length; j++){
+			if(tiles[i] === tmpTiles[j]){
 				hasFlag = true;
-				tmpTitles.splice(j, 1);
+				tmpTiles.splice(j, 1);
 
 				break;
 			}
@@ -276,29 +276,29 @@ remote.synchronousTitles = function(titles, uid, roomId, cb){
 /**
  * 取牌
  **/
-remote.giveTitles = function(uid, roomId, cb){
+remote.giveTiles = function(uid, roomId, cb){
 	var room = this.rooms[roomId];
 	var player = room.players[uid];
 
-	var title = room.titles.shift();
-	rpcLogger.debug("-- give(). give title: %s, room titles: %s", title, room.titles);
-	if(title){
-		cb(title);
+	var tile = room.tiles.shift();
+	rpcLogger.debug("-- give(). give tile: %s, room tiles: %s", tile, room.tiles);
+	if(tile){
+		cb(tile);
 	}else {
-		rpcLogger.error("give title error.")
+		rpcLogger.error("give tile error.")
 	}
 
 };
 /**
  * 出牌
  **/
-remote.playTitles = function(uid, roomId, title, cb){
+remote.playTiles = function(uid, roomId, tile, cb){
 	//判断是否是刚刚拿的牌，如果是广播给整个房间；否则将刚刚拿到的牌插入玩家所有的牌中并将玩家打出的
 	// 牌删除，并广播给所有玩家
     var room = this.rooms[roomId];
     var player = room.players[uid];
 
-    var param = {route: "playTitle", title: title, player: uid};
+    var param = {route: "playTile", tile: tile, player: uid};
     room.channel.pushMessage(param);
 
 };
@@ -364,7 +364,7 @@ var MJRoom = function(id) {
 	this.userAmount =0;
 	this.owner = null;
 	this.dices = {};
-	this.titles = [];
+	this.tiles = [];
 	this.playerToken = null;
 	this.playerArray = [];
 	this.dealer = null;
@@ -451,36 +451,36 @@ MJRoom.prototype.getMembers = function () {
 /**
  * 将洗好的牌放到房间中
  **/
-MJRoom.prototype.setTitles = function (titles, channelService) {
-	this.titles = titles;
+MJRoom.prototype.setTiles = function (tiles, channelService) {
+	this.tiles = tiles;
 
 	for (var j = 0; j < 3; j++){
 		for (var i = 0; i < 3; i++) {
-			var tmp = this.titles.splice(0,4);
-			this.playerArray[i].titles = this.playerArray[i].titles.concat(tmp);
+			var tmp = this.tiles.splice(0,4);
+			this.playerArray[i].tiles = this.playerArray[i].tiles.concat(tmp);
 		}
 	}
 
 	for(var k = 0; k < 3; k++){
-		var tmp = this.titles.shift();
-		this.playerArray[k].titles.push(tmp);
+		var tmp = this.tiles.shift();
+		this.playerArray[k].tiles.push(tmp);
 	}
 
 	for(var i = 0; i < 3; i++){
-		rpcLogger.debug("player %s titles %s.", this.playerArray[i].uid, this.playerArray[i].titles);
+		rpcLogger.debug("player %s tiles %s.", this.playerArray[i].uid, this.playerArray[i].tiles);
 	}
 
 	for(var i = 0; i < 3; i++){
-		var param = {route: 'onTitles',msg: this.playerArray[i].titles, target: this.playerArray[i].uid};
+		var param = {route: 'onTiles',msg: this.playerArray[i].tiles, target: this.playerArray[i].uid};
 
 		var tuid = this.playerArray[i].uid;
 		var tsid = this.channel.getMember(tuid)['sid'];
 
-		rpcLogger.debug("-- server %s player %s titles: %s", tsid, tuid, this.playerArray[i].titles);
+		rpcLogger.debug("-- server %s player %s tiles: %s", tsid, tuid, this.playerArray[i].tiles);
 
 		channelService.pushMessageByUids(param, [{  uid: tuid,  sid: tsid }]);
 
-		this.playerArray[i].sortTitles();
+		this.playerArray[i].sortTiles();
 	}
 };
 
@@ -508,10 +508,10 @@ var MJPlayer = function(name) {
 	this.position = 0;
 	this.readyForGameFlag = false;
 	this.nextPlayer = null;
-	this.titles = [];
-	this.bambooTitles = [];
-	this.dotTitles = [];
-	this.dragonTitles = [];
+	this.tiles = [];
+	this.bambooTiles = [];
+	this.dotTiles = [];
+	this.dragonTiles = [];
 };
 
 MJPlayer.prototype.setPlayerPosition = function(position){
@@ -522,43 +522,43 @@ MJPlayer.prototype.getPlayerPosition = function(){
 	return this.position;
 };
 
-MJPlayer.prototype.sortTitles = function () {
-	var titles = this.titles;
+MJPlayer.prototype.sortTiles = function () {
+	var tiles = this.tiles;
 
-	for (var i = 0; i < titles.length; i++) {
-		if (Math.floor(titles[i] / 100) === 1) {
-			this.bambooTitles.push(titles[i]);
-		} else if (Math.floor(titles[i] / 100) === 3) {
-			this.dotTitles.push(titles[i]);
-		} else if (Math.floor(titles[i] / 100) === 5) {
-			this.dragonTitles.push(titles[i]);
+	for (var i = 0; i < tiles.length; i++) {
+		if (Math.floor(tiles[i] / 100) === 1) {
+			this.bambooTiles.push(tiles[i]);
+		} else if (Math.floor(tiles[i] / 100) === 3) {
+			this.dotTiles.push(tiles[i]);
+		} else if (Math.floor(tiles[i] / 100) === 5) {
+			this.dragonTiles.push(tiles[i]);
 		} else {
 			return false;
 		}
 	}
 
-	this.bambooTitles = sortTitles(this.bambooTitles);
-	rpcLogger.debug("-- MJPlayer.sortTitles bambooTitles : %s", this.bambooTitles );
+	this.bambooTiles = sortTiles(this.bambooTiles);
+	rpcLogger.debug("-- MJPlayer.sortTiles bambooTiles : %s", this.bambooTiles );
 
-	this.dotTitles = sortTitles(this.dotTitles);
-	rpcLogger.debug("-- MJPlayer.sortTitles dotTitles : %s", this.dotTitles );
+	this.dotTiles = sortTiles(this.dotTiles);
+	rpcLogger.debug("-- MJPlayer.sortTiles dotTiles : %s", this.dotTiles );
 
-	this.dragonTitles = sortTitles(this.dragonTitles);
-	rpcLogger.debug("-- MJPlayer.sortTitles dragonTitles : %s", this.dragonTitles );
+	this.dragonTiles = sortTiles(this.dragonTiles);
+	rpcLogger.debug("-- MJPlayer.sortTiles dragonTiles : %s", this.dragonTiles );
 
 };
 
-function sortTitles(titles) {
-	var len = titles.length;
+function sortTiles(tiles) {
+	var len = tiles.length;
 
 	for(var i = 0; i < len - 1; i++){
 		for (var j = 0; j < len - 1 - i; j++) {
-			if(titles[j] % 10 > titles[j+1] % 10){
-				var tmp = titles[j+1];
-				titles[j+1] = titles[j];
-				titles[j] = tmp;
+			if(tiles[j] % 10 > tiles[j+1] % 10){
+				var tmp = tiles[j+1];
+				tiles[j+1] = tiles[j];
+				tiles[j] = tmp;
 			}
 		}
 	}
-	return titles;
+	return tiles;
 }

@@ -785,8 +785,8 @@ window.k1controller = (function () {
             self.viewEvent["removePrepareGameLayer"]();
         });
 
-        pomelo.on("onTitles", function (data) {
-            console.log("onTitles: player " + data.target + ". titles: " + data.msg);
+        pomelo.on("onTiles", function (data) {
+            console.log("onTiles: player " + data.target + ". tiles: " + data.msg);
             var player = self.players["current"];
 
             if(player.id === data.target){

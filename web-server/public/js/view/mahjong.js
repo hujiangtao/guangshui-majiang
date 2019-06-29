@@ -150,13 +150,13 @@ var Mahjong = cc.Sprite.extend({
                         var cb = function (data) {
                             var targetParent = target.getParent();
                             if(this.paiDui === "shou"){
-                                for(var i = 0; i < player.titles.length; i++){
-                                    if(player.titles[i] === self._mahjongId){
-                                        player.titles.splice(i, 1, player.naPai);
+                                for(var i = 0; i < player.tiles.length; i++){
+                                    if(player.tiles[i] === self._mahjongId){
+                                        player.tiles.splice(i, 1, player.naPai);
                                     }
                                 }
 
-                                player.sortTitles();
+                                player.sortTiles();
                             }
                             targetParent.chupai(self._mahjongId, "myself", targetParent);
                             target.removeFromParent();

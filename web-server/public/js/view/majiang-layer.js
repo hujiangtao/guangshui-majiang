@@ -52,7 +52,7 @@ var majiangLayer = cc.Layer.extend({
         this.timer();
     },
 
-    chupai: function(title, position, that){
+    chupai: function(tile, position, that){
     }
 
 });

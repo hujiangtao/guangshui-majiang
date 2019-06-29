@@ -128,8 +128,8 @@ handler.give = function(msg, session, next){
 	var tokenId = msg.token;
 
 	if(uid === tokenId){
-		self.app.rpc.game.gameRemote.giveTitles(session, uid, roomId, function (title) {
-			next(null,{code: 200, title: title});
+		self.app.rpc.game.gameRemote.giveTiles(session, uid, roomId, function (tile) {
+			next(null,{code: 200, tile: tile});
 		});
 	}else {
 		next(null, {code: 500, msg: "Token does not match"});
@@ -143,9 +143,9 @@ handler.play = function(msg, session, next){
 
 	var uid = session.uid;
 	var  roomId = session.get("roomId");
-	var title = msg.title;
+	var tile = msg.tile;
 
-	self.app.rpc.game.gameRemote.playTitles(session, uid, roomId, title, function (title) {
+	self.app.rpc.game.gameRemote.playTiles(session, uid, roomId, tile, function (tile) {
 
 	});
 };
@@ -159,7 +159,7 @@ handler.synchronous = function(msg, session, next){
 	var uid = session.uid;
 	var roomId = session.get("roomId");
 
-	self.app.rpc.game.gameRemote.synchronousTitles(session, msg.titles, uid, roomId,function (flag) {
+	self.app.rpc.game.gameRemote.synchronousTiles(session, msg.tiles, uid, roomId,function (flag) {
 		if(flag){
 			next(null, {code: 200})
 		}else {
