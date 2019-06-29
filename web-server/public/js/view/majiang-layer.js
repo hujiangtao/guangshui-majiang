@@ -28,7 +28,16 @@ var majiangLayer = cc.Layer.extend({
             this.currentPlayer.tiles.sortTiles();
         }, self);
 
-        self.runAction(cc.sequence(action1, action2));
+        // 庄家先发牌
+        var action3 = cc.callFunc(function(){
+
+        }, self);
+
+        if(this.currentPlayer.isDealer){
+            self.runAction(cc.sequence(action1, action2, action1, action3));
+        }else{
+            self.runAction(cc.sequence(action1, action2));
+        }
     },
 
     onEnter: function(){

@@ -778,7 +778,6 @@ window.k1controller = (function () {
                     self.dealer = self.players[key];
                     self.players[key].isDealer = true;
                 }
-                console.log("current player " + currentPlayer.id + " isDealer =  " + currentPlayer.isDealer);
             }
 
             self.diceArray.push(data.number.number1);
