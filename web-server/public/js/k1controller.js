@@ -44,6 +44,7 @@ window.k1controller = (function () {
         }
 
         this.tiles = new Tiles();
+        this.isDealer = false;
     }
 
     //计算player在当前客户端的位置
@@ -772,11 +773,12 @@ window.k1controller = (function () {
 
         pomelo.on("onReadyForGame",function (data) {
             console.log("dice number: " + data.number);
-            // self._readyCallback(data.number, data.dealer);
             for(var key in self.players){
                 if(self.players[key].id === data.dealer){
                     self.dealer = self.players[key];
+                    self.players[key].isDealer = true;
                 }
+                console.log("current player " + currentPlayer.id + " isDealer =  " + currentPlayer.isDealer);
             }
 
             self.diceArray.push(data.number.number1);
