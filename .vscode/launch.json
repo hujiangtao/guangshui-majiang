@@ -6,11 +6,11 @@
     "configurations": [
         {
             "type": "chrome",
-            "request": "attach",
-            "name": "Attach to Chrome",
-            "port": 9222,
-            "webRoot": "${workspaceFolder}/web-server/public"
-        },        
+            "request": "launch",
+            "name": "Launch Chrome",
+            "url": "http://192.168.16.118:3001/index.html",
+            "webRoot": "${workspaceFolder}/web-server/public/"
+        },
         {
             "type": "node",
             "request": "attach",
