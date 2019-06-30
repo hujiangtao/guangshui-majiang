@@ -9,7 +9,10 @@
             "request": "launch",
             "name": "Launch Chrome",
             "url": "http://192.168.16.118:3001/index.html",
-            "webRoot": "${workspaceFolder}/web-server/public/"
+            "webRoot": "${workspaceFolder}/web-server/public/",
+            "pathMapping": {
+                "vscode-remote://ssh-remote+*/home/jwhoo/mj/guangshui-majiang": "${workspaceFolder}"
+            }
         },
         {
             "type": "node",
