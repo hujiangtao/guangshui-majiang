@@ -26,6 +26,7 @@ var majiangLayer = cc.Layer.extend({
 
         var action2 = cc.callFunc(function () {
             this.currentPlayer.tiles.sortTiles();
+            this.currentPlayer.tiles.shou.traverseType();
         }, self);
 
         // 庄家先发牌

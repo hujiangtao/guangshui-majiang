@@ -38,7 +38,7 @@ var Mahjong = cc.Sprite.extend({
 
         this.majiang = mj;
         this.setMJPosition();
-        mj.view = this;
+        mj.setView(this);           //在controller中注册麻将sprite
     },
 
     setMJPosition: function(){
