@@ -398,10 +398,12 @@ window.k1controller = (function () {
             traverseList.expandStartPointer.expand(traverseList);
 
             // status === "end"表示这次不能展开了，也就是这次没有展开的动作
-            if(traverseList.expandStartPointer.status === "end" && traverseList.expandStartPointer.top !== null){
-                traverseList.expandStartPointer.status = "reset";
-                movePointer(traverseList, "top");
-            }else if(traverseList.expandStartPointer.top !== null){
+            if(traverseList.expandStartPointer.status === "end"){
+                if(traverseList.expandStartPointer.top !== null){
+                    traverseList.expandStartPointer.status = "reset";
+                    movePointer(traverseList, "top");
+                }
+            }else{
                 if(traverseList.expandEndPointer.next !== null && matchingTypes(traverseList)){
                     movePointer(traverseList, "next");
                 }else if(traverseList.expandEndPointer.next === null && matchingTypes(traverseList)){
