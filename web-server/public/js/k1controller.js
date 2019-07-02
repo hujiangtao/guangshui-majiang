@@ -277,11 +277,8 @@ window.k1controller = (function () {
         this.header = null;
         this.end = null;
         this.length = 0;
-        // this.pointer = null;
         this.expandStartPointer = null;
         this.expandEndPointer = null;
-
-        // this.expandNode = null;
         this.listTilesType = [];           //牌型
     }
 
@@ -401,9 +398,10 @@ window.k1controller = (function () {
             traverseList.expandStartPointer.expand(traverseList);
 
             // status === "end"表示这次不能展开了，也就是这次没有展开的动作
-            if(traverseList.expandStartPointer.status === "end"){
+            if(traverseList.expandStartPointer.status === "end" && traverseList.expandStartPointer.top !== null){
+                traverseList.expandStartPointer.status = "reset";
                 movePointer(traverseList, "top");
-            }else{
+            }else if(traverseList.expandStartPointer.top !== null){
                 if(traverseList.expandEndPointer.next !== null && matchingTypes(traverseList)){
                     movePointer(traverseList, "next");
                 }else if(traverseList.expandEndPointer.next === null && matchingTypes(traverseList)){
@@ -421,15 +419,17 @@ window.k1controller = (function () {
             var tmpNode = list.expandStartPointer.top;
             list.expandEndPointer = list.expandStartPointer.top;
 
-            while (tmpNode.top.suitIndex === list.expandEndPointer.suitIndex
+            while (tmpNode.top !== null && tmpNode.top.suitIndex === list.expandEndPointer.suitIndex
             && tmpNode.top.points === list.expandEndPointer.points){
                 tmpNode = tmpNode.top;
             }
+
+            list.expandStartPointer = tmpNode;
         }else {
             var tmpNode = list.expandEndPointer.next;
             list.expandStartPointer = list.expandEndPointer.next;
 
-            while (tmpNode.next.suitIndex === list.expandStartPointer.suitIndex
+            while (tmpNode.next !== null && tmpNode.next.suitIndex === list.expandStartPointer.suitIndex
             && tmpNode.next.points === list.expandStartPointer.points){
                 tmpNode = tmpNode.next;
             }
@@ -516,13 +516,8 @@ window.k1controller = (function () {
         this.tiles = [];                        //同花色同点数的麻将对象.
         this.type = null;
         this.status = "init";                   //init, expand, reset, end
-
         this.count = 0;                         //实际count
-        // this.currentCount = 0;                  //被前面的顺子占用后的count
-        // this.expandCount = 0;                   //展开一个step后的count
-        // this.expandFlag = "ready";              //"ready","run","end".
         this.step = 1;
-        // this.tType = new TilesType();
     }
 
     //向节点中添加麻将牌对象
@@ -544,7 +539,7 @@ window.k1controller = (function () {
     };
 
     NodeOfTilesList.prototype.expand = function(traverseList) {
-        if(this.status === "init"){
+        if(this.status === "init" || this.status === "reset"){
             compareTileType(traverseList.expandStartPointer, traverseList);
             this.status = "expand";
         }else if(this.status === "expand"){
@@ -569,7 +564,7 @@ window.k1controller = (function () {
     var expandShunzi = function (list) {
         var tmpNode = list.expandEndPointer;
         
-        while (tmpNode.points === list.expandStartPointer.points
+        while (tmpNode !== null && tmpNode.points === list.expandStartPointer.points
         && tmpNode.suitIndex === list.expandStartPointer.suitIndex) {
             if(tmpNode.type === "shun"){
                 var i = 0;
@@ -585,12 +580,14 @@ window.k1controller = (function () {
                     }else if(tmpTile.suitIndex === list.expandEndPointer.next.next.suitIndex
                         && tmpTile.points === list.expandEndPointer.next.next.points){
 
-                        list.expandEndPointer.next.next.push(tmpTile);
+                        list.expandEndPointer.next.next.tiles.push(tmpTile);
                         list.expandEndPointer.next.next.count += 1;
                     }else {
                         console.log("expand shunzi error!");
                     }
                 }
+
+                tmpNode.type = "dan";
                 return true;
             }
 
@@ -602,6 +599,7 @@ window.k1controller = (function () {
 
     var expandNode = function (list) {
         list.expandEndPointer.next.top = new NodeOfTilesList(list.expandStartPointer.points, list.expandStartPointer.suitIndex);
+        list.expandEndPointer.next.top.status = "expand";
         list.expandEndPointer.next.top.next = list.expandEndPointer.next;
         list.expandEndPointer.next = list.expandEndPointer.next.top;
         list.expandEndPointer.next.top = list.expandEndPointer;
@@ -643,7 +641,7 @@ window.k1controller = (function () {
     };
 
     var resetNode = function (list) {
-        while (list.expandEndPointer.top.points === list.expandStartPointer.points
+        while (list.expandEndPointer.top !== null && list.expandEndPointer.top.points === list.expandStartPointer.points
         && list.expandEndPointer.top.suitIndex === list.expandStartPointer.suitIndex){
             var i = 0;
             while (i < list.expandStartPointer.step){
@@ -657,7 +655,11 @@ window.k1controller = (function () {
 
         }
 
-        // list.expandStartPointer.status = "reset";
+        if(list.expandStartPointer.count === 1){
+            list.expandStartPointer.type = "dan";
+        }else{
+            compareTileType(list.expandStartPointer, list);
+        }
     };
 
     //判断比较是否能组成顺子
